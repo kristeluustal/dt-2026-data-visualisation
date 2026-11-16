@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python for Digital Humanities — Lesson 10</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202522;
+      --muted: #59645f;
+      --paper: #f5f4ef;
+      --surface: #fff;
+      --line: #dedfd8;
+      --green: #176b58;
+      --green-pale: #e2f0e9;
+      --rust: #a64b34;
+      --rust-pale: #f8e9e3;
+      --gold: #87620b;
+      --gold-pale: #f6efd9;
+      --blue: #365a83;
+      --blue-pale: #e9eff6;
+      --code: #202923;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    header {
+      padding: 2rem max(1rem, calc((100% - 1120px) / 2));
+      background: var(--green);
+      color: white;
+    }
+    header h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.5rem); line-height: 1.15; }
+    header p { margin: .6rem 0 0; color: #e3f0e9; }
+    main { max-width: 1120px; margin: auto; padding: 1.25rem 1rem 3rem; }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 1.4rem;
+    }
+    .tab {
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      background: #e9e9e2;
+      color: var(--ink);
+      padding: .7rem 1rem;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab[aria-selected="true"] { background: var(--surface); color: var(--green); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .intro {
+      margin: 0 0 1.5rem;
+      padding: 1rem 1.2rem;
+      border-left: 4px solid var(--green);
+      background: var(--green-pale);
+    }
+    .intro h2 { margin: 0 0 .4rem; font-size: 1.15rem; }
+    .intro p { margin: 0; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 2rem 0 .9rem;
+      font-size: 1.15rem;
+    }
+    .section-title::after { content: ""; height: 1px; background: var(--line); flex: 1; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); gap: 1rem; }
+    .card { background: var(--surface); border: 1px solid var(--line); }
+    .card h3 {
+      display: flex;
+      justify-content: space-between;
+      gap: .75rem;
+      margin: 0;
+      padding: .7rem 1rem;
+      border-bottom: 1px solid var(--line);
+      font-size: 1rem;
+    }
+    .badge { color: var(--green); font-size: .75rem; white-space: nowrap; }
+    .body { padding: .85rem 1rem 1rem; }
+    .body > :first-child { margin-top: 0; }
+    .explain { color: var(--muted); }
+    .scenario {
+      margin: .8rem 0;
+      padding: .7rem .8rem;
+      border-left: 3px solid var(--blue);
+      background: var(--blue-pale);
+      color: var(--muted);
+      font-size: .92rem;
+    }
+    .scenario p { margin: .25rem 0; }
+    .scenario strong { color: var(--ink); }
+    .think { color: var(--blue); }
+    pre {
+      overflow-x: auto;
+      margin: .8rem 0;
+      padding: .85rem 1rem;
+      background: var(--code);
+      color: #edf2eb;
+      font: .86rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .keys { padding-left: 1.2rem; color: var(--muted); font-size: .9rem; }
+    .keys li { margin: .2rem 0; }
+    .dh-use {
+      margin: .75rem 0 0;
+      padding: .5rem .65rem;
+      background: var(--gold-pale);
+      color: #66500f;
+      font-size: .88rem;
+    }
+    .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: .8rem; }
+    .why-item { background: var(--surface); border: 1px solid var(--line); padding: 1rem; }
+    .why-item h3 { margin: 0 0 .35rem; font-size: 1rem; }
+    .why-item p { margin: 0; color: var(--muted); font-size: .93rem; }
+    @media (max-width: 600px) {
+      header { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+      .tab { flex: 1 1 100%; text-align: left; border: 1px solid var(--line); }
+      .tabs { border: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>IFI6218.DT — Python for Digital Humanities</h1>
+    <p>Lesson 10 · Cheat Sheet · Google Colab / GitHub Codespaces</p>
+  </header>
+
+  <main>
+    <nav class="tabs" role="tablist" aria-label="Lesson sections">
+      <button class="tab" id="tab-why" role="tab" aria-controls="why" aria-selected="true">Why This Matters</button>
+      <button class="tab" id="tab-s1" role="tab" aria-controls="s1" aria-selected="false" tabindex="-1">Session 01 — Python Basics</button>
+      <button class="tab" id="tab-s2" role="tab" aria-controls="s2" aria-selected="false" tabindex="-1">Session 02 — Word Clouds</button>
+    </nav>
+
+    <section class="panel active" id="why" role="tabpanel" aria-labelledby="tab-why">
+      <div class="intro">
+        <h2>Why Python in Digital Humanities?</h2>
+        <p>Humanities research has always been about texts, archives, images, and patterns in human culture. Python lets you work with these at scale — reading thousands of documents, finding patterns across corpora, and visualising language — things impossible by hand alone.</p>
+      </div>
+      <div class="why-grid">
+        <article class="why-item"><h3>Text Analysis at Scale</h3><p>Literature, history, journalism — Python can read entire archives in seconds, counting words, tracking themes, and finding patterns that would take human readers years.</p></article>
+        <article class="why-item"><h3>Corpus Linguistics</h3><p>Linguists use loops and string operations to study how language changes over time — which words appear together, how sentences are structured across dialects and eras.</p></article>
+        <article class="why-item"><h3>Archive Processing</h3><p>Historians process digitised newspapers, letters, and records. Variables store data; loops process thousands of documents; conditions filter relevant entries.</p></article>
+        <article class="why-item"><h3>Visual Storytelling</h3><p>Word clouds turn raw text into visual arguments — a tool for communicating findings to non-technical audiences, used in journalism, public history, and education.</p></article>
+        <article class="why-item"><h3>Critical Search</h3><p>Filtering with conditions (if/else) mirrors archival source criticism: not all data is relevant. Code makes selection criteria explicit and reproducible.</p></article>
+        <article class="why-item"><h3>Open &amp; Reproducible</h3><p>Python is free, widely taught, and runs in a browser via Colab. Sharing a notebook means sharing the method — making humanities research as transparent as a footnote.</p></article>
+      </div>
+    </section>
+
+    <section class="panel" id="s1" role="tabpanel" aria-labelledby="tab-s1" hidden>
+      <div class="intro">
+        <h2>Session 01 — The building blocks</h2>
+        <p>These exercises cover the core ideas all programming is built on: arithmetic, variables, loops, conditions, and string operations. In Digital Humanities, these become tools for working with words, sentences, and collections of texts.</p>
+      </div>
+
+      <h2 class="section-title">Arithmetic &amp; Variables</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Arithmetic <span class="badge">Ex 01</span></h3>
+          <div class="body">
+            <p class="explain">Python as a calculator. The result appears immediately — good for testing ideas quickly.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A researcher counts references to a person across digitised newspaper issues. Comparing totals can help describe how attention changes over time.</p>
+              <p><strong>Link to the code:</strong> The simple values in the example below show arithmetic that can also be used with archive counts.</p>
+              <p class="think"><strong>Think:</strong> Which newspapers were digitised, and whose stories may be missing from the count?</p>
+            </div>
+            <pre><code>3 + 2</code></pre>
+            <ul class="keys"><li><strong>+  -  *  /  //  %  **</strong> — basic operators</li><li><strong>//</strong> integer division · <strong>%</strong> remainder · <strong>**</strong> power</li></ul>
+            <p class="dh-use">Digital Humanities use: Counting word frequencies, page numbers, years between dates</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Variables &amp; Strings <span class="badge">Ex 02</span></h3>
+          <div class="body">
+            <p class="explain">A <strong>variable</strong> stores a value and gives it a name. <strong>Strings</strong> are text wrapped in quotes. <code>+</code> joins strings together.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A digital archive stores a letter’s author and title alongside its text. Keeping these details under clear names helps researchers identify and describe each source.</p>
+              <p><strong>Link to the code:</strong> The example below uses a simple name to demonstrate storing text and joining it into a message.</p>
+              <p class="think"><strong>Think:</strong> Who assigned the author’s name, and could that catalogue record reflect an uncertain attribution?</p>
+            </div>
+            <pre><code>first_name = "Juku"
+print("Hello, " + first_name)</code></pre>
+            <ul class="keys"><li><strong>=</strong> assigns a value to a name</li><li><strong>print()</strong> displays the result</li><li>Strings use <strong>" "</strong> or <strong>' '</strong> quotes</li></ul>
+            <p class="dh-use">Digital Humanities use: Storing an author's name, a book title, a date, a source URL</p>
+          </div>
+        </article>
+      </div>
+
+      <h2 class="section-title">Loops</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Loop over numbers <span class="badge">Ex 03</span></h3>
+          <div class="body">
+            <p class="explain"><code>range(5)</code> produces 0, 1, 2, 3, 4. The loop runs the indented block once per value.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A historian reviews a catalogue of digitised letters and needs to label each record in a small batch. Numbering items makes the set easier to track.</p>
+              <p><strong>Link to the code:</strong> The example below loops through five simple numbers to show the repeated step used for a batch of records.</p>
+              <p class="think"><strong>Think:</strong> Who decided which letters entered the catalogue, and what was left out?</p>
+            </div>
+            <pre><code>for number in range(5):
+    print(number)</code></pre>
+            <ul class="keys"><li><strong>for ... in ...:</strong> — the loop structure</li><li><strong>range(n)</strong> — integers from 0 to n-1</li><li>Indentation (4 spaces) marks the loop body</li></ul>
+            <p class="dh-use">Digital Humanities use: Numbering pages, iterating over years, processing rows in a dataset</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Loop over characters <span class="badge">Ex 04</span></h3>
+          <div class="body">
+            <p class="explain">You can loop over any sequence — including the letters in a string, one at a time.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A researcher examines how a person’s name is written in a historical letter, character by character, to compare spelling across documents.</p>
+              <p><strong>Link to the code:</strong> The example below uses a simple name to show the same character-by-character process.</p>
+              <p class="think"><strong>Think:</strong> Could damaged pages, handwriting, or transcription choices change which letters appear?</p>
+            </div>
+            <pre><code>for letter in first_name:
+    print(letter)</code></pre>
+            <ul class="keys"><li>A string is a sequence of characters</li><li>Same <code>for ... in ...</code> pattern as Ex 03</li></ul>
+            <p class="dh-use">Digital Humanities use: Reading a text character by character — useful for encoding detection, transliteration</p>
+          </div>
+        </article>
+      </div>
+
+      <h2 class="section-title">Conditions</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>if / else <span class="badge">Ex 05</span></h3>
+          <div class="body">
+            <p class="explain">Make a decision based on a condition. If the condition is true, run the first block; otherwise, run the else block.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A researcher selects newspaper articles published before a chosen date for a study of public debate. A clear rule makes the selection easier to explain.</p>
+              <p><strong>Link to the code:</strong> The example below compares a simple value with a rule to demonstrate how a selection decision is made.</p>
+              <p class="think"><strong>Think:</strong> What perspectives might be excluded by choosing only articles from that period?</p>
+            </div>
+            <pre><code>age = 8
+if age &lt;= 7:
+    print("Free")
+else:
+    print("Buy a ticket")</code></pre>
+            <ul class="keys"><li><strong>&lt;=  &gt;=  ==  !=  &lt;  &gt;</strong> — comparison operators</li><li><code>==</code> checks equality (not <code>=</code>, which assigns)</li></ul>
+            <p class="dh-use">Digital Humanities use: Filtering sources by date, selecting texts from a certain period</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Nested if / else <span class="badge">Ex 06</span></h3>
+          <div class="body">
+            <p class="explain">Conditions can nest inside each other, creating multiple decision paths.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> An archive groups records first by whether they have a date, then by which decade they belong to. This helps researchers organise sources with different levels of detail.</p>
+              <p><strong>Link to the code:</strong> The example below uses simple values and nested decisions to illustrate sorting records into more than one group.</p>
+              <p class="think"><strong>Think:</strong> What happens to records with missing or disputed dates under these categories?</p>
+            </div>
+            <pre><code>age = 8
+if age &lt;= 7:
+    print("Free")
+else:
+    print("Buy")
+    if age &lt;= 18:
+        print("child ticket")
+    else:
+        print("full ticket")</code></pre>
+            <ul class="keys"><li>Each level of nesting adds 4 more spaces</li><li>Use <strong>elif</strong> to chain conditions cleanly</li></ul>
+            <p class="dh-use">Digital Humanities use: Classifying texts by era, genre, or word count across multiple categories</p>
+          </div>
+        </article>
+      </div>
+
+      <h2 class="section-title">String Slicing</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Slicing a string <span class="badge">Ex 07</span></h3>
+          <div class="body">
+            <p class="explain">Extract any part of a string using <code>[start:end:step]</code>. Indices start at 0; negative indices count from the end.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A citation list contains short reference codes with dates or collection numbers in fixed positions. Researchers may inspect just one part to compare records.</p>
+              <p><strong>Link to the code:</strong> The example below uses a simple text value to show how a selected section can be taken from a longer string.</p>
+              <p class="think"><strong>Think:</strong> What context could be lost when a citation is reduced to only a few characters?</p>
+            </div>
+            <pre><code>sentence = "racecarleveldeified"
+print(sentence[0:3])    # "rac"
+print(sentence[:3])     # "rac"
+print(sentence[5:10])   # characters 5-9
+print(sentence[5:])     # from index 5 to end
+print(sentence[-1])     # last character
+print(sentence[-4:])    # last 4 characters
+print(sentence[5:][0])  # chain slices
+print(sentence[::2])    # every 2nd character</code></pre>
+            <ul class="keys"><li><strong>[start:end]</strong> — end is <em>not</em> included</li><li><strong>[-1]</strong> — last character; <strong>[-n:]</strong> — last n characters</li><li><strong>[::2]</strong> — every other character (step)</li></ul>
+            <p class="dh-use">Digital Humanities use: Extracting date components, file name prefixes, citation codes from structured text</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Splitting into words <span class="badge">Ex 08</span></h3>
+          <div class="body">
+            <p class="explain"><code>.split()</code> breaks a string into a list of words. Lists can be sliced just like strings.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A researcher studies a sentence from a novel or letter and wants to examine its words one by one. Splitting text can make patterns easier to inspect.</p>
+              <p><strong>Link to the code:</strong> The example below uses a simple sentence to demonstrate separating words and selecting parts of the list.</p>
+              <p class="think"><strong>Think:</strong> How might punctuation, spelling variation, or transcription errors affect what counts as a word?</p>
+            </div>
+            <pre><code>sentence = "Alice went to the park..."
+words = sentence.split(" ")
+print(words)         # full list
+print(words[0])      # first word
+print(words[0:3])    # first 3 words
+print(words[-3:])    # last 3 words
+print(len(words))    # word count
+print(words[2][0])   # 1st letter of 3rd word
+print(words[-1][-1]) # last letter of last word</code></pre>
+            <ul class="keys"><li><strong>.split(" ")</strong> splits on spaces into a list of words</li><li><strong>len()</strong> counts items in a list</li><li>Chain: <strong>words[i][j]</strong> — j-th character of i-th word</li></ul>
+            <p class="dh-use">Digital Humanities use: Tokenising sentences, counting words in a passage, finding the first word of each sentence</p>
+          </div>
+        </article>
+      </div>
+
+      <h2 class="section-title">List Comprehensions</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Basic list comprehension <span class="badge">Ex 09</span></h3>
+          <div class="body">
+            <p class="explain">A compact way to loop over a list and collect results. This one just reproduces the words, but sets up the pattern.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A researcher gathers the words from a set of letters to create a list for later comparison. Keeping each word visible can help reveal repeated themes or names.</p>
+              <p><strong>Link to the code:</strong> The example below uses a simple sentence and collects its words into a new list.</p>
+              <p class="think"><strong>Think:</strong> Which words might be overrepresented because of the author, genre, or the texts selected?</p>
+            </div>
+            <pre><code>sentence = "When Alice and her younger..."
+words = sentence.split(" ")
+print([word for word in words])</code></pre>
+            <ul class="keys"><li>Structure: <strong>[expression for item in list]</strong></li><li>Returns a new list</li></ul>
+            <p class="dh-use">Digital Humanities use: The foundation of text processing — every word in a corpus becomes a data point</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Comprehensions with transforms &amp; filters <span class="badge">Ex 10</span></h3>
+          <div class="body">
+            <p class="explain">List comprehensions can transform each item and optionally filter with <code>if</code>. Very powerful for text analysis.</p>
+            <div class="scenario">
+              <p><strong>Humanities scenario:</strong> A researcher filters words from digitised newspaper articles to focus on longer terms or compare word lengths across a collection.</p>
+              <p><strong>Link to the code:</strong> The example below uses a simple list of words to demonstrate selecting and transforming items.</p>
+              <p class="think"><strong>Think:</strong> What important voices or meanings might a length-based filter leave out?</p>
+            </div>
+            <pre><code># First letter of every word
+[word[0] for word in words]
+# Length of every word
+[len(word) for word in words]
+# Only short words (5 letters or fewer)
+[word for word in words if len(word) &lt;= 5]
+# First+last letter of long words
+[word[0] + word[-1] for word in words
+ if len(word) &gt;= 5]
+# Join result with underscores
+"_".join([word[0]+word[-1]
+          for word in words if len(word)&gt;=5])
+# Reverse the word list
+words[::-1]</code></pre>
+            <ul class="keys"><li>Add <strong>if condition</strong> at the end to filter</li><li><strong>"sep".join(list)</strong> — joins a list into one string</li><li><strong>[::-1]</strong> — reverses any sequence</li></ul>
+            <p class="dh-use">Digital Humanities use: Extract initials, find long words, build concordances, reverse a sentence for analysis</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="s2" role="tabpanel" aria-labelledby="tab-s2" hidden>
+      <div class="intro">
+        <h2>Session 02 — Word clouds &amp; text visualisation</h2>
+        <p>These exercises load real text from the web, generate word clouds, apply image masks, filter stopwords, and customise colours — turning a plain text file into a visual argument about its content.</p>
+      </div>
+
+      <h2 class="section-title">Setup &amp; Basic Word Cloud</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Install &amp; first word cloud <span class="badge">Ex 11</span></h3>
+          <div class="body">
+            <p class="explain">Install the library once per session (Colab), then generate a word cloud from a string of text and display it as an image.</p>
+            <pre><code>pip install wordcloud
+from wordcloud import WordCloud
+wc = WordCloud().generate("rain rain brings hope hope")
+img = wc.to_image()
+img.show()</code></pre>
+            <ul class="keys"><li><strong>pip install</strong> downloads a library (once per session)</li><li><strong>from ... import ...</strong> brings in just the class you need</li><li><strong>.generate(text)</strong> builds the cloud from a string</li><li><strong>.to_image()</strong> converts it to a viewable image</li></ul>
+            <p class="dh-use">Digital Humanities use: First step toward visualising any text corpus — speeches, novels, newspaper archives</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Load text from the web <span class="badge">Ex 12</span></h3>
+          <div class="body">
+            <p class="explain">Fetch any public text file directly from a URL. Project Gutenberg, government archives, and digitised newspapers are all accessible this way.</p>
+            <pre><code>import urllib.request
+text_url = "PASTE_YOUR_GOOGLE_DOC_EXPORT_URL_HERE"
+
+text = urllib.request.urlopen(text_url).read().decode("utf-8")
+text[:50]   # preview first 50 characters</code></pre>
+            <ul class="keys"><li><strong>urllib.request</strong> — built-in Python web fetching</li><li><strong>.read()</strong> downloads bytes; <strong>.decode("utf-8")</strong> converts to text</li><li><strong>text[:50]</strong> previews without printing everything</li></ul>
+            <p class="dh-use">Digital Humanities use: Load historical texts, digitised books, or any corpus hosted online without downloading files</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Word cloud from loaded text <span class="badge">Ex 13</span></h3>
+          <div class="body">
+            <p class="explain">Once <code>text</code> is loaded, generating the cloud is a single chained line.</p>
+            <pre><code>WordCloud().generate_from_text(text).to_image()</code></pre>
+            <ul class="keys"><li><strong>.generate_from_text()</strong> takes a full text string</li><li>Method chaining: each <strong>.</strong> calls the next step on the result</li></ul>
+            <p class="dh-use">Digital Humanities use: Instant visual summary of any document — good for exploring unfamiliar corpora</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Stopwords &amp; background colour <span class="badge">Ex 14</span></h3>
+          <div class="body">
+            <p class="explain"><strong>Stopwords</strong> are common words (and, the, but…) that carry no meaning and dominate word clouds unless removed.</p>
+            <pre><code>WordCloud(
+    stopwords=["and", "then", "but"],
+    background_color="white"
+).generate_from_text(text).to_image()</code></pre>
+            <ul class="keys"><li><strong>stopwords=</strong> — list of words to exclude</li><li><strong>background_color=</strong> — default is black</li><li>Use a full NLTK stopword list in Ex 17</li></ul>
+            <p class="dh-use">Digital Humanities use: Critical step: removing grammatical noise reveals the content words that carry meaning</p>
+          </div>
+        </article>
+      </div>
+
+      <h2 class="section-title">Image Masks</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Load an image from Drive <span class="badge">Ex 15</span></h3>
+          <div class="body">
+            <p class="explain">Download an image from Google Drive and display it. The File ID comes from the sharing link of your Drive file.</p>
+            <pre><code>from PIL import Image
+import urllib.request
+image_url = "PASTE_YOUR_DIRECT_DRIVE_IMAGE_URL_HERE"
+
+img = urllib.request.urlretrieve(image_url, "image1.png")
+Image.open("image1.png")</code></pre>
+            <ul class="keys"><li><strong>PIL / Pillow</strong> — Python image library</li><li><strong>urlretrieve(url, filename)</strong> downloads and saves locally</li><li>Replace <strong>FILE_ID</strong> with your Drive file's ID</li></ul>
+            <p class="dh-use">Digital Humanities use: Load historical maps, portraits, or silhouettes to use as word cloud shapes</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Word cloud shaped by an image <span class="badge">Ex 16</span></h3>
+          <div class="body">
+            <p class="explain">Use any black-and-white image as a <strong>mask</strong> — the word cloud fills the white areas of the shape.</p>
+            <pre><code>import numpy as np
+text_url = "PASTE_YOUR_GOOGLE_DOC_EXPORT_URL_HERE"
+image_url = "PASTE_YOUR_DIRECT_DRIVE_IMAGE_URL_HERE"
+
+text = urllib.request.urlopen(
+    text_url
+).read().decode("utf-8")
+img = urllib.request.urlretrieve(image_url, "image1.png")
+WordCloud(
+    mask=np.array(Image.open("image1.png")),
+    background_color="white"
+).generate_from_text(text).to_image()</code></pre>
+            <ul class="keys"><li><strong>np.array(Image.open(...))</strong> converts an image to a numeric grid</li><li><strong>mask=</strong> — the shape the words must stay inside</li><li>Dark pixels = no words; white = fill with words</li></ul>
+            <p class="dh-use">Digital Humanities use: Shape a word cloud like a country outline, a book, or a person's silhouette for visual storytelling</p>
+          </div>
+        </article>
+      </div>
+
+      <h2 class="section-title">Stopwords &amp; Custom Colours</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>NLTK stopword list from web <span class="badge">Ex 17</span></h3>
+          <div class="body">
+            <p class="explain">Fetch a full professional stopword list directly from GitHub rather than typing individual words manually.</p>
+            <pre><code>stopwords_list = urllib.request.urlopen(
+    "https://gist.githubusercontent.com/sebleier/554280/..."
+).read().decode("utf-8").split("\\n")
+WordCloud(
+    mask=np.array(Image.open("image1.png")),
+    background_color="white",
+    stopwords=stopwords_list
+).generate_from_text(text).to_image()</code></pre>
+            <ul class="keys"><li><strong>.split("\\n")</strong> splits the file into one word per line</li><li>NLTK stopword list: about 179 common English words</li><li>Custom stopword lists for any language can be loaded the same way</li></ul>
+            <p class="dh-use">Digital Humanities use: Essential for non-English corpora — load Estonian, French, or domain-specific stopwords the same way</p>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Custom colour function <span class="badge">Ex 18</span></h3>
+          <div class="body">
+            <p class="explain">Define your own rule for colouring words. Here: short words are green, longer ones are blue.</p>
+            <pre><code>def color_function(word, font_size, position,
+                   orientation, random_state=None,
+                   **additional_args):
+    if len(word) &lt; 4:   # fewer than 4 letters
+        return "green"
+    return "blue"
+
+WordCloud().generate_from_text(text)\
+           .recolor(color_func=color_function)\
+           .to_image()</code></pre>
+            <ul class="keys"><li><strong>def</strong> defines a reusable function</li><li>Colour by word length, frequency, sentiment, part of speech…</li><li><strong>.recolor(color_func=)</strong> applies your function to the existing cloud</li></ul>
+            <p class="dh-use">Digital Humanities use: Highlight sentiment, rare vs. common words, or named entities in different colours</p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tabs = [...document.querySelectorAll('[role="tab"]')];
+    const panels = [...document.querySelectorAll('[role="tabpanel"]')];
+
+    function selectTab(tab) {
+      tabs.forEach((item) => {
+        const selected = item === tab;
+        item.setAttribute("aria-selected", String(selected));
+        item.tabIndex = selected ? 0 : -1;
+      });
+      panels.forEach((panel) => {
+        const selected = panel.id === tab.getAttribute("aria-controls");
+        panel.hidden = !selected;
+        panel.classList.toggle("active", selected);
+      });
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => selectTab(tab));
+      tab.addEventListener("keydown", (event) => {
+        let nextIndex = index;
+        if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+        if (event.key === "ArrowLeft") nextIndex = (index - 1 + tabs.length) % tabs.length;
+        if (nextIndex !== index) {
+          event.preventDefault();
+          tabs[nextIndex].focus();
+          selectTab(tabs[nextIndex]);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
